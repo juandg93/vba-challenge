@@ -1,0 +1,98 @@
+Sub SimpleStockAnalysis()
+
+    ' Declare Worksheet variable
+    Dim ws As Worksheet
+    
+    ' Loop through all worksheets in the workbook
+    For Each ws In Worksheets
+    
+        ' Declare variables
+        Dim lastRow As Long
+        Dim i As Long, j As Long
+        Dim startPrice As Double, endPrice As Double
+        Dim yearlyChange As Double, percentChange As Double, totalVolume As Double
+        Dim maxIncrease As Double, maxDecrease As Double, maxVolume As Double
+        Dim tickerMaxInc As String, tickerMaxDec As String, tickerMaxVol As String
+        
+        ' Initialize maximum and minimum trackers to zero
+        maxIncrease = 0
+        maxDecrease = 0
+        maxVolume = 0
+        
+        ' Find the last row with data in column A
+        lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Create headers for summary table
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volume"
+        
+        ' Initialize summary row counter
+        j = 2
+        
+        ' Loop through all rows with data
+        For i = 2 To lastRow
+            ' If new stock ticker found, update startPrice and reset totalVolume
+            If i = 2 Or ws.Cells(i, 1).Value <> ws.Cells(i - 1, 1).Value Then
+                startPrice = ws.Cells(i, 3).Value
+                totalVolume = 0
+            End If
+            
+            ' Update the totalVolume
+            totalVolume = totalVolume + ws.Cells(i, 7).Value
+            
+            ' Check if it's the last entry for the current stock ticker
+            If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Or i = lastRow Then
+                endPrice = ws.Cells(i, 6).Value
+                yearlyChange = endPrice - startPrice
+                
+                ' Avoid division by zero
+                If startPrice <> 0 Then
+                    percentChange = (yearlyChange / startPrice) * 100
+                Else
+                    percentChange = 0
+                End If
+                
+                ' Write the summary data
+                ws.Cells(j, 9).Value = ws.Cells(i, 1).Value
+                ws.Cells(j, 10).Value = yearlyChange
+                ws.Cells(j, 11).Value = percentChange
+                ws.Cells(j, 12).Value = totalVolume
+                
+                ' Update maximum and minimum trackers
+                If percentChange > maxIncrease Then
+                    maxIncrease = percentChange
+                    tickerMaxInc = ws.Cells(i, 1).Value
+                End If
+                
+                If percentChange < maxDecrease Then
+                    maxDecrease = percentChange
+                    tickerMaxDec = ws.Cells(i, 1).Value
+                End If
+                
+                If totalVolume > maxVolume Then
+                    maxVolume = totalVolume
+                    tickerMaxVol = ws.Cells(i, 1).Value
+                End If
+                
+                ' Move to the next summary row
+                j = j + 1
+            End If
+        Next i
+        
+        ' Write the greatest metrics
+        ws.Cells(2, 14).Value = "Greatest % Increase"
+        ws.Cells(3, 14).Value = "Greatest % Decrease"
+        ws.Cells(4, 14).Value = "Greatest Total Volume"
+        
+        ws.Cells(2, 15).Value = maxIncrease
+        ws.Cells(3, 15).Value = maxDecrease
+        ws.Cells(4, 15).Value = maxVolume
+        
+        ws.Cells(2, 16).Value = tickerMaxInc
+        ws.Cells(3, 16).Value = tickerMaxDec
+        ws.Cells(4, 16).Value = tickerMaxVol
+    Next ws
+
+End Sub
